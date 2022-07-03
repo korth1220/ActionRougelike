@@ -27,6 +27,11 @@ void ABobCharacter::BeginPlay()
 	
 }
 
+void ABobCharacter::MoveForward(float Value)
+{
+	AddMovementInput(GetActorForwardVector(), Value);
+}
+
 // Called every frame
 void ABobCharacter::Tick(float DeltaTime)
 {
@@ -37,7 +42,13 @@ void ABobCharacter::Tick(float DeltaTime)
 // Called to bind functionality to input
 void ABobCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
+
+
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis("MoveForward", this, &ABobCharacter::MoveForward);
+
+	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 
 }
 
