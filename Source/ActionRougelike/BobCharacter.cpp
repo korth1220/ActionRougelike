@@ -4,6 +4,7 @@
 #include "BobCharacter.h"
 #include <GameFramework/SpringArmComponent.h>
 #include <Camera/CameraComponent.h>
+#include <GameFramework/CharacterMovementComponent.h>
 
 // Sets default values
 ABobCharacter::ABobCharacter()
@@ -13,11 +14,18 @@ ABobCharacter::ABobCharacter()
 
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>("SpringArmComp");
 	SpringArmComp->SetupAttachment(RootComponent);
+	SpringArmComp->bUsePawnControlRotation = true;
 
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComp->SetupAttachment(SpringArmComp);
 
 
+
+
+
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+
+	bUseControllerRotationYaw = false;
 }
 
 // Called when the game starts or when spawned
@@ -29,7 +37,32 @@ void ABobCharacter::BeginPlay()
 
 void ABobCharacter::MoveForward(float Value)
 {
-	AddMovementInput(GetActorForwardVector(), Value);
+	FRotator ControlRot = GetControlRotation();
+	ControlRot.Pitch = 0.0f;
+	ControlRot.Roll= 0.0f;
+
+	
+	AddMovementInput(ControlRot.Vector(), Value);
+}
+
+void ABobCharacter::MoveRight(float Value)
+{
+	FRotator ControlRot = GetControlRotation();
+	ControlRot.Pitch = 0.0f;
+	ControlRot.Roll = 0.0f;
+	FVector RightVector = FRotationMatrix(ControlRot).GetScaledAxis(EAxis::Y);
+
+	AddMovementInput(RightVector, Value);
+}
+
+void ABobCharacter::PrimaryAttack()
+{
+	FTransform SpawnTM = FTransform(GetControlRotation(), GetActorLocation());
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+
+	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
 }
 
 // Called every frame
@@ -47,8 +80,12 @@ void ABobCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABobCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ABobCharacter::MoveRight);
 
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+
+	PlayerInputComponent->BindAction("PrimaryFire", IE_Pressed, this, &ABobCharacter::PrimaryAttack);
 
 }
 
