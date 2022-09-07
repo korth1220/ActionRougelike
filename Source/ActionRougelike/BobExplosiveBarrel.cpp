@@ -14,26 +14,27 @@ ABobExplosiveBarrel::ABobExplosiveBarrel()
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>("StaticMeshComp");
 	StaticMeshComp->SetSimulatePhysics(true);
 	StaticMeshComp->SetCollisionProfileName("PhysicsActor");
+	StaticMeshComp->SetMassOverrideInKg("StaticMeshComp",50.0f,true);
+	RootComponent = StaticMeshComp;
 
 	ForceComp = CreateDefaultSubobject<URadialForceComponent>("ForceComp");
 	ForceComp->SetupAttachment(StaticMeshComp);
-	ForceComp->ImpulseStrength = 6000.0f;
-	ForceComp->Radius = 2000.0f;
+	ForceComp->ImpulseStrength = 60000.0f;
+	ForceComp->Radius = 750.0f;
+
+	ForceComp->AddCollisionChannelToAffect(ECC_WorldDynamic);
+
+	//StaticMeshComp->OnComponentHit.AddDynamic(this, &ABobExplosiveBarrel::OnActorHit);
 }
 
-// Called when the game starts or when spawned
-void ABobExplosiveBarrel::BeginPlay()
+
+void ABobExplosiveBarrel::PostInitializeComponents()
 {
-	Super::BeginPlay();
-	
+	Super::PostInitializeComponents();
+	StaticMeshComp->OnComponentHit.AddDynamic(this, &ABobExplosiveBarrel::OnActorHit);
 }
 
-// Called every frame
-void ABobExplosiveBarrel::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 
-}
 
 void ABobExplosiveBarrel::OnActorHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
